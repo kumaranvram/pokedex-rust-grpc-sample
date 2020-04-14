@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package pokedex;
+
+message Error {
+    int32 code = 1;
+    string message = 2;
+}
+
+enum PokemonType {
+    NORMAL = 0;
+    FIRE = 1;
+    GROUND = 2;
+    WATER = 3;
+    GRASS = 4;
+    PSYCHIC = 5;
+    GHOST = 6;
+    ICE = 7;
+    STEEL = 8;
+}
+
+message Query {
+    string value = 1;
+}
+
+message Pokemon {
+    int32 id = 1;
+    string name = 2;
+    repeated PokemonType type = 3;
+}
+
+message PokemonResponse {
+    bool success = 1;
+    Pokemon pokemon = 2;
+    Error error = 3;
+}
+
+message PokemonsResponse {
+    bool success = 1;
+    repeated Pokemon pokemons = 2;
+    Error error = 3;
+}
+
+service PokeDexService {
+    rpc GetPokemonByName(Query) returns (PokemonResponse);
+    rpc GetPokemonsByType(Query) returns (PokemonsResponse);
+    rpc MakePokedexEntry(Pokemon) returns (PokemonResponse);
+}
