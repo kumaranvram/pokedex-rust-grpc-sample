@@ -17,6 +17,10 @@ enum PokemonType {
     GHOST = 6;
     ICE = 7;
     STEEL = 8;
+    POISON = 9;
+    FLYING = 10;
+    FIGHTING = 11;
+    ELECTRIC = 12;
 }
 
 message Query {
@@ -24,25 +28,26 @@ message Query {
 }
 
 message Pokemon {
-    int32 id = 1;
     string name = 2;
     repeated PokemonType type = 3;
 }
 
 message PokemonResponse {
-    bool success = 1;
-    Pokemon pokemon = 2;
-    Error error = 3;
+    int32 id = 1;
+    string name = 2;
+    repeated PokemonType type = 3;
 }
 
 message PokemonsResponse {
-    bool success = 1;
-    repeated Pokemon pokemons = 2;
-    Error error = 3;
+    repeated PokemonResponse pokemons = 1;
+}
+
+message PokedexEntryResponse {
+    int32 id = 1;
 }
 
 service PokeDexService {
     rpc GetPokemonByName(Query) returns (PokemonResponse);
     rpc GetPokemonsByType(Query) returns (PokemonsResponse);
-    rpc MakePokedexEntry(Pokemon) returns (PokemonResponse);
+    rpc MakePokedexEntry(Pokemon) returns (PokedexEntryResponse);
 }

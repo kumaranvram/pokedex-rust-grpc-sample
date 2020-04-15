@@ -12,6 +12,13 @@ pub struct Query {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Pokemon {
+    #[prost(string, tag = "2")]
+    pub name: std::string::String,
+    #[prost(enumeration = "PokemonType", repeated, tag = "3")]
+    pub r#type: ::std::vec::Vec<i32>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PokemonResponse {
     #[prost(int32, tag = "1")]
     pub id: i32,
     #[prost(string, tag = "2")]
@@ -20,22 +27,14 @@ pub struct Pokemon {
     pub r#type: ::std::vec::Vec<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PokemonResponse {
-    #[prost(bool, tag = "1")]
-    pub success: bool,
-    #[prost(message, optional, tag = "2")]
-    pub pokemon: ::std::option::Option<Pokemon>,
-    #[prost(message, optional, tag = "3")]
-    pub error: ::std::option::Option<Error>,
+pub struct PokemonsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub pokemons: ::std::vec::Vec<PokemonResponse>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PokemonsResponse {
-    #[prost(bool, tag = "1")]
-    pub success: bool,
-    #[prost(message, repeated, tag = "2")]
-    pub pokemons: ::std::vec::Vec<Pokemon>,
-    #[prost(message, optional, tag = "3")]
-    pub error: ::std::option::Option<Error>,
+pub struct PokedexEntryResponse {
+    #[prost(int32, tag = "1")]
+    pub id: i32,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -49,6 +48,10 @@ pub enum PokemonType {
     Ghost = 6,
     Ice = 7,
     Steel = 8,
+    Poison = 9,
+    Flying = 10,
+    Fighting = 11,
+    Electric = 12,
 }
 #[doc = r" Generated client implementations."]
 pub mod poke_dex_service_client {
@@ -116,7 +119,7 @@ pub mod poke_dex_service_client {
         pub async fn make_pokedex_entry(
             &mut self,
             request: impl tonic::IntoRequest<super::Pokemon>,
-        ) -> Result<tonic::Response<super::PokemonResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::PokedexEntryResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -160,7 +163,7 @@ pub mod poke_dex_service_server {
         async fn make_pokedex_entry(
             &self,
             request: tonic::Request<super::Pokemon>,
-        ) -> Result<tonic::Response<super::PokemonResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::PokedexEntryResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     #[doc(hidden)]
@@ -255,7 +258,7 @@ pub mod poke_dex_service_server {
                     #[allow(non_camel_case_types)]
                     struct MakePokedexEntrySvc<T: PokeDexService>(pub Arc<T>);
                     impl<T: PokeDexService> tonic::server::UnaryService<super::Pokemon> for MakePokedexEntrySvc<T> {
-                        type Response = super::PokemonResponse;
+                        type Response = super::PokedexEntryResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
