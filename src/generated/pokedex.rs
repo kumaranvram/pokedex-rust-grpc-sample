@@ -24,12 +24,7 @@ pub struct PokemonResponse {
     #[prost(string, tag = "2")]
     pub name: std::string::String,
     #[prost(enumeration = "PokemonType", repeated, tag = "3")]
-    pub r#type: ::std::vec::Vec<i32>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PokemonsResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub pokemons: ::std::vec::Vec<PokemonResponse>,
+    pub pokemon_type: ::std::vec::Vec<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PokedexEntryResponse {
@@ -54,13 +49,13 @@ pub enum PokemonType {
     Electric = 12,
 }
 #[doc = r" Generated client implementations."]
-pub mod poke_dex_service_client {
+pub mod poke_dex_client {
     #![allow(unused_variables, dead_code, missing_docs)]
     use tonic::codegen::*;
-    pub struct PokeDexServiceClient<T> {
+    pub struct PokeDexClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl PokeDexServiceClient<tonic::transport::Channel> {
+    impl PokeDexClient<tonic::transport::Channel> {
         #[doc = r" Attempt to create a new client by connecting to a given endpoint."]
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -71,7 +66,7 @@ pub mod poke_dex_service_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> PokeDexServiceClient<T>
+    impl<T> PokeDexClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::ResponseBody: Body + HttpBody + Send + 'static,
@@ -97,14 +92,14 @@ pub mod poke_dex_service_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/pokedex.PokeDexService/GetPokemonByName");
+            let path = http::uri::PathAndQuery::from_static("/pokedex.PokeDex/GetPokemonByName");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn get_pokemons_by_type(
             &mut self,
             request: impl tonic::IntoRequest<super::Query>,
-        ) -> Result<tonic::Response<super::PokemonsResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<tonic::codec::Streaming<super::PokemonResponse>>, tonic::Status>
+        {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -112,9 +107,10 @@ pub mod poke_dex_service_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/pokedex.PokeDexService/GetPokemonsByType");
-            self.inner.unary(request.into_request(), path, codec).await
+            let path = http::uri::PathAndQuery::from_static("/pokedex.PokeDex/GetPokemonsByType");
+            self.inner
+                .server_streaming(request.into_request(), path, codec)
+                .await
         }
         pub async fn make_pokedex_entry(
             &mut self,
@@ -127,39 +123,43 @@ pub mod poke_dex_service_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/pokedex.PokeDexService/MakePokedexEntry");
+            let path = http::uri::PathAndQuery::from_static("/pokedex.PokeDex/MakePokedexEntry");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
-    impl<T: Clone> Clone for PokeDexServiceClient<T> {
+    impl<T: Clone> Clone for PokeDexClient<T> {
         fn clone(&self) -> Self {
             Self {
                 inner: self.inner.clone(),
             }
         }
     }
-    impl<T> std::fmt::Debug for PokeDexServiceClient<T> {
+    impl<T> std::fmt::Debug for PokeDexClient<T> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "PokeDexServiceClient {{ ... }}")
+            write!(f, "PokeDexClient {{ ... }}")
         }
     }
 }
 #[doc = r" Generated server implementations."]
-pub mod poke_dex_service_server {
+pub mod poke_dex_server {
     #![allow(unused_variables, dead_code, missing_docs)]
     use tonic::codegen::*;
-    #[doc = "Generated trait containing gRPC methods that should be implemented for use with PokeDexServiceServer."]
+    #[doc = "Generated trait containing gRPC methods that should be implemented for use with PokeDexServer."]
     #[async_trait]
-    pub trait PokeDexService: Send + Sync + 'static {
+    pub trait PokeDex: Send + Sync + 'static {
         async fn get_pokemon_by_name(
             &self,
             request: tonic::Request<super::Query>,
         ) -> Result<tonic::Response<super::PokemonResponse>, tonic::Status>;
+        #[doc = "Server streaming response type for the GetPokemonsByType method."]
+        type GetPokemonsByTypeStream: Stream<Item = Result<super::PokemonResponse, tonic::Status>>
+            + Send
+            + Sync
+            + 'static;
         async fn get_pokemons_by_type(
             &self,
             request: tonic::Request<super::Query>,
-        ) -> Result<tonic::Response<super::PokemonsResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<Self::GetPokemonsByTypeStream>, tonic::Status>;
         async fn make_pokedex_entry(
             &self,
             request: tonic::Request<super::Pokemon>,
@@ -167,11 +167,11 @@ pub mod poke_dex_service_server {
     }
     #[derive(Debug)]
     #[doc(hidden)]
-    pub struct PokeDexServiceServer<T: PokeDexService> {
+    pub struct PokeDexServer<T: PokeDex> {
         inner: _Inner<T>,
     }
     struct _Inner<T>(Arc<T>, Option<tonic::Interceptor>);
-    impl<T: PokeDexService> PokeDexServiceServer<T> {
+    impl<T: PokeDex> PokeDexServer<T> {
         pub fn new(inner: T) -> Self {
             let inner = Arc::new(inner);
             let inner = _Inner(inner, None);
@@ -183,9 +183,9 @@ pub mod poke_dex_service_server {
             Self { inner }
         }
     }
-    impl<T, B> Service<http::Request<B>> for PokeDexServiceServer<T>
+    impl<T, B> Service<http::Request<B>> for PokeDexServer<T>
     where
-        T: PokeDexService,
+        T: PokeDex,
         B: HttpBody + Send + Sync + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -198,10 +198,10 @@ pub mod poke_dex_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/pokedex.PokeDexService/GetPokemonByName" => {
+                "/pokedex.PokeDex/GetPokemonByName" => {
                     #[allow(non_camel_case_types)]
-                    struct GetPokemonByNameSvc<T: PokeDexService>(pub Arc<T>);
-                    impl<T: PokeDexService> tonic::server::UnaryService<super::Query> for GetPokemonByNameSvc<T> {
+                    struct GetPokemonByNameSvc<T: PokeDex>(pub Arc<T>);
+                    impl<T: PokeDex> tonic::server::UnaryService<super::Query> for GetPokemonByNameSvc<T> {
                         type Response = super::PokemonResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(&mut self, request: tonic::Request<super::Query>) -> Self::Future {
@@ -226,12 +226,14 @@ pub mod poke_dex_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/pokedex.PokeDexService/GetPokemonsByType" => {
+                "/pokedex.PokeDex/GetPokemonsByType" => {
                     #[allow(non_camel_case_types)]
-                    struct GetPokemonsByTypeSvc<T: PokeDexService>(pub Arc<T>);
-                    impl<T: PokeDexService> tonic::server::UnaryService<super::Query> for GetPokemonsByTypeSvc<T> {
-                        type Response = super::PokemonsResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                    struct GetPokemonsByTypeSvc<T: PokeDex>(pub Arc<T>);
+                    impl<T: PokeDex> tonic::server::ServerStreamingService<super::Query> for GetPokemonsByTypeSvc<T> {
+                        type Response = super::PokemonResponse;
+                        type ResponseStream = T::GetPokemonsByTypeStream;
+                        type Future =
+                            BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
                         fn call(&mut self, request: tonic::Request<super::Query>) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { inner.get_pokemons_by_type(request).await };
@@ -240,7 +242,7 @@ pub mod poke_dex_service_server {
                     }
                     let inner = self.inner.clone();
                     let fut = async move {
-                        let interceptor = inner.1.clone();
+                        let interceptor = inner.1;
                         let inner = inner.0;
                         let method = GetPokemonsByTypeSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
@@ -249,15 +251,15 @@ pub mod poke_dex_service_server {
                         } else {
                             tonic::server::Grpc::new(codec)
                         };
-                        let res = grpc.unary(method, req).await;
+                        let res = grpc.server_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
                 }
-                "/pokedex.PokeDexService/MakePokedexEntry" => {
+                "/pokedex.PokeDex/MakePokedexEntry" => {
                     #[allow(non_camel_case_types)]
-                    struct MakePokedexEntrySvc<T: PokeDexService>(pub Arc<T>);
-                    impl<T: PokeDexService> tonic::server::UnaryService<super::Pokemon> for MakePokedexEntrySvc<T> {
+                    struct MakePokedexEntrySvc<T: PokeDex>(pub Arc<T>);
+                    impl<T: PokeDex> tonic::server::UnaryService<super::Pokemon> for MakePokedexEntrySvc<T> {
                         type Response = super::PokedexEntryResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
@@ -295,13 +297,13 @@ pub mod poke_dex_service_server {
             }
         }
     }
-    impl<T: PokeDexService> Clone for PokeDexServiceServer<T> {
+    impl<T: PokeDex> Clone for PokeDexServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self { inner }
         }
     }
-    impl<T: PokeDexService> Clone for _Inner<T> {
+    impl<T: PokeDex> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone(), self.1.clone())
         }
@@ -311,7 +313,7 @@ pub mod poke_dex_service_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: PokeDexService> tonic::transport::NamedService for PokeDexServiceServer<T> {
-        const NAME: &'static str = "pokedex.PokeDexService";
+    impl<T: PokeDex> tonic::transport::NamedService for PokeDexServer<T> {
+        const NAME: &'static str = "pokedex.PokeDex";
     }
 }

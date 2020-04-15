@@ -35,19 +35,15 @@ message Pokemon {
 message PokemonResponse {
     int32 id = 1;
     string name = 2;
-    repeated PokemonType type = 3;
-}
-
-message PokemonsResponse {
-    repeated PokemonResponse pokemons = 1;
+    repeated PokemonType pokemonType = 3;
 }
 
 message PokedexEntryResponse {
     int32 id = 1;
 }
 
-service PokeDexService {
+service PokeDex {
     rpc GetPokemonByName(Query) returns (PokemonResponse);
-    rpc GetPokemonsByType(Query) returns (PokemonsResponse);
+    rpc GetPokemonsByType(Query) returns (stream PokemonResponse);
     rpc MakePokedexEntry(Pokemon) returns (PokedexEntryResponse);
 }
