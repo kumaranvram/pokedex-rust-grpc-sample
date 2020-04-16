@@ -1,15 +1,15 @@
-### A Simple Pokedex like application built to demonstrate Rust + gRPC
+## A Simple Pokedex like application built to demonstrate Rust + gRPC
 
-#### Table of Contents
+### Table of Contents
 * Introduction
 * Dependencies
 * Setup Instructions
 
-#### Introduction
+### Introduction
 This is a sample application which implements a Simple Pokedex like application, used for demonstrating gRPC implementation with Rust. 
 This application is for demo purposes only.
 
-#### Dependencies
+### Dependencies
 
 You need the PostgreSQL as a backend to run this project.
 
@@ -21,7 +21,7 @@ The following dependencies are used in this project
 | tonic      | gRPC                                              |
 | dotenv     | For configuring and reading environment variables |
 
-#### Setup Instructions
+### Setup Instructions
 
 Install `diesel-cli` by running
 ```bash
