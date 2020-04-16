@@ -15,7 +15,7 @@ pub struct Pokemon {
     #[prost(string, tag = "1")]
     pub name: std::string::String,
     #[prost(enumeration = "PokemonType", repeated, tag = "2")]
-    pub r#type: ::std::vec::Vec<i32>,
+    pub pokemon_type: ::std::vec::Vec<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PokemonResponse {

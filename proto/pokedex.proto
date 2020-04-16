@@ -29,7 +29,7 @@ message Query {
 
 message Pokemon {
     string name = 1;
-    repeated PokemonType type = 2;
+    repeated PokemonType pokemonType = 2;
 }
 
 message PokemonResponse {
