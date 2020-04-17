@@ -1,2 +1,1 @@
 include!("../generated/pokedex.rs");
-
