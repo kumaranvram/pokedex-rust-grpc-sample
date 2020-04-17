@@ -1,3 +1,4 @@
+#![allow(bare_trait_objects)]
 use std::error;
 use std::error::Error;
 use std::fmt;

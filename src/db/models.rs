@@ -2,8 +2,7 @@ use diesel::Queryable;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use std::env;
-use std::error::Error;
-use crate::db::schema::pokemons::columns::name;
+use crate::db::schema::pokemons::columns::*;
 use crate::db::schema::pokemons::dsl::pokemons;
 
 use crate::errors::app_error::AppError;
@@ -27,10 +26,18 @@ impl Pokemon {
             Err(err) => Err(AppError::new(&err))
         };
     }
+
+    pub fn find_by_type(requested_type: String) -> Result<Vec<Pokemon>, AppError> {
+        let connection = establish_connection();
+        let required_types = format!("%{}%", requested_type.to_uppercase());
+        return match pokemons.filter(types.like(required_types)).load::<Pokemon>(&connection) {
+            Ok(result) => Ok(result),
+            Err(err) => Err(AppError::new(&err))
+        };
+    }
 }
 
 pub fn establish_connection() -> PgConnection {
-
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
     PgConnection::establish(&database_url)
