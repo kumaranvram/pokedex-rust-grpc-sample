@@ -4,8 +4,9 @@ use diesel::pg::PgConnection;
 use std::env;
 use crate::db::schema::pokemons::columns::*;
 use crate::db::schema::pokemons::dsl::pokemons;
-
 use crate::errors::app_error::AppError;
+use diesel::dsl::sql;
+use diesel::sql_types::{Integer, Bool};
 
 // ORM
 #[derive(Queryable, Clone)]
@@ -34,6 +35,24 @@ impl Pokemon {
             Ok(result) => Ok(result),
             Err(err) => Err(AppError::new(&err))
         };
+    }
+
+    pub fn save(pokemon_name: String, pokemon_types: String) -> Result<i32, AppError> {
+        let connection = establish_connection();
+        let query = sql::<Bool>(format!("INSERT INTO pokemons (name, types) VALUES ('{}', '{}')", pokemon_name, pokemon_types).as_str());
+        return match query.execute(&connection) {
+            Ok(_) => {
+                let select_query = sql::<Integer>( "SELECT id FROM pokemons order by id desc limit 1");
+                match select_query.load(&connection) {
+                    Ok(result) => match result.get(0) {
+                        Some(value) => Ok(*value),
+                        None => Err(AppError::new_from_string("Cannot insert into table"))
+                    },
+                    Err(err) => Err(AppError::new(&err))
+                }
+            },
+            Err(err) => Err(AppError::new(&err))
+        }
     }
 }
 
