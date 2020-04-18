@@ -6,6 +6,7 @@
 * Setup Instructions
 * Build
 * Running the server
+* Running the client
 
 ### Introduction
 This is a sample application which implements a Simple Pokedex like application, used for demonstrating gRPC implementation with Rust. 
@@ -63,4 +64,16 @@ cargo run --bin server
 The server will start running on the `APP_PORT` specified in `.env` file.
 
 The application can be tested using a app like [BloomRPC](https://github.com/uw-labs/bloomrpc) 
-or a CLI application like [grpcc](https://github.com/njpatel/grpcc)
+or a CLI application like [grpcc](https://github.com/njpatel/grpcc) or [grpcurl](https://github.com/fullstorydev/grpcurl).
+
+### Running the client
+
+Ensure that there is a `SERVER_URL` in the format `http://<ip>:<port>` in the `.env` file. 
+
+To run the client, run
+
+```
+cargo run --bin client
+```
+
+The client will start make a pokedex entry and will query the result.
