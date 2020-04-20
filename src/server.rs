@@ -1,12 +1,10 @@
-mod domain;
+mod pokedexpb;
 mod db;
 mod errors;
 
 use tonic::{transport::Server, Status, Response, Request};
-use domain::poke_dex_server::PokeDex;
-use domain::{PokemonResponse, PokemonsResponse, Query, Pokemon};
-use domain::poke_dex_server::PokeDexServer;
-use crate::domain::{PokedexEntryResponse, PokemonType};
+use crate::pokedexpb::poke_dex_server::{PokeDex, PokeDexServer};
+use crate::pokedexpb::{PokemonResponse, PokemonsResponse, Query, Pokemon, PokedexEntryResponse, PokemonType};
 use dotenv::dotenv;
 use std::env;
 

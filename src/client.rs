@@ -1,9 +1,9 @@
-pub mod domain;
+pub mod pokedexpb;
 use dotenv::dotenv;
-use domain::poke_dex_client::PokeDexClient;
-use domain::Query;
+use pokedexpb::poke_dex_client::PokeDexClient;
+use pokedexpb::Query;
 use std::env;
-use crate::domain::{Pokemon, PokemonType};
+use crate::pokedexpb::{Pokemon, PokemonType};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
