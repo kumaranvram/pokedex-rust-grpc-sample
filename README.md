@@ -77,3 +77,11 @@ cargo run --bin client
 ```
 
 The client will start make a pokedex entry and will query the result.
+
+## LEGAL
+
+### Pokémon
+
+Pokémon images, names and information (c) 1995-2014 Nintendo/Game freak.
+
+This site was built entirely for education purposes only.
