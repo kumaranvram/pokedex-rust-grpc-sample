@@ -9,7 +9,7 @@
 * Running the client
 
 ### Introduction
-This is a sample application which implements a Simple Pokedex like application, used for demonstrating gRPC implementation with Rust. 
+This is a sample application which implements a Simple Pokedex like application, used for demonstrating [gRPC implementation with Rust](https://blog.kumaranvram.com/grpc-and-rust). 
 This application is for demo purposes only.
 
 ### Prerequisites and dependencies
