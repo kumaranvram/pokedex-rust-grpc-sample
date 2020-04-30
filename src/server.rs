@@ -4,12 +4,10 @@ mod errors;
 
 use tonic::{transport::Server, Status, Response, Request};
 use crate::pokedexpb::poke_dex_server::{PokeDex, PokeDexServer};
-use crate::pokedexpb::{PokemonResponse, Query, Pokemon, PokedexEntryResponse, PokemonType};
+use crate::pokedexpb::{PokemonResponse, Query, Pokemon, PokedexEntryResponse, PokemonType, GetPokemonsByTypeRequest};
 use dotenv::dotenv;
 use std::env;
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
-use tonic::codegen::Stream;
+use tokio::sync::mpsc;
 
 #[macro_use]
 extern crate diesel;
@@ -53,29 +51,31 @@ impl PokeDex for PokeDexContext {
         }
     }
 
-    type GetPokemonsByTypeStream: Stream<Item = Result<super::PokemonResponse, tonic::Status>>
-                                                    + Send
-                                                    + Sync
-                                                    + 'static = mpsc::Receiver<Result<PokemonResponse, Status>>;
-    async fn get_pokemons_by_type(&self, request: Request<Query>) -> Result<Response<Self::GetPokemonsByTypeStream>, Status> {
-        let requested_type = String::from(request.into_inner().value);
-        let (mut tx, rx) = mpsc::channel();
+    type GetPokemonsByTypeStream: Stream<Item=Result<super::PokemonResponse, tonic::Status>>
+    + Send
+    + Sync
+    + 'static = mpsc::Receiver<Result<PokemonResponse, Status>>;
+
+    async fn get_pokemons_by_type(&self, request: Request<GetPokemonsByTypeRequest>) -> Result<Response<Self::GetPokemonsByTypeStream>, Status> {
+        let requested_type_query = request.into_inner().pokemon_type;
+        let requested_type = get_pokemon_type_string(requested_type_query);
+        let (mut tx, rx) = mpsc::channel(4);
 
 
         tokio::spawn(async move {
-            let pokemons = db::Pokemon::find_by_type(requested_type).unwrap();
-            for p in pokemons {
-                println!("{}", p.name);
-                println!("{}", p.id);
+            match db::Pokemon::find_by_type(requested_type) {
+                Ok(pokemons) => {
+                    for p in pokemons {
+                        let pokemon = p.clone();
+                        tx.send(Ok(PokemonResponse {
+                            id: pokemon.id,
+                            name: pokemon.name,
+                            pokemon_type: to_pokemon_types(p.types),
+                        })).await.unwrap();
+                    }
+                }
+                Err(_) => {}
             }
-            // for p in pokemons {
-            //     let pokemon = p.clone();
-            //     tx.send(Ok(PokemonResponse {
-            //         id: pokemon.id,
-            //         name: pokemon.name,
-            //         pokemon_type: to_pokemon_types(p.types),
-            //     })).await.unwrap();
-            // }
         });
 
         Ok(Response::new(rx))

@@ -31,6 +31,11 @@ pub struct PokedexEntryResponse {
     #[prost(int32, tag = "1")]
     pub id: i32,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetPokemonsByTypeRequest {
+    #[prost(enumeration = "PokemonType", tag = "1")]
+    pub pokemon_type: i32,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum PokemonType {
@@ -97,7 +102,7 @@ pub mod poke_dex_client {
         }
         pub async fn get_pokemons_by_type(
             &mut self,
-            request: impl tonic::IntoRequest<super::Query>,
+            request: impl tonic::IntoRequest<super::GetPokemonsByTypeRequest>,
         ) -> Result<tonic::Response<tonic::codec::Streaming<super::PokemonResponse>>, tonic::Status>
         {
             self.inner.ready().await.map_err(|e| {
@@ -158,7 +163,7 @@ pub mod poke_dex_server {
             + 'static;
         async fn get_pokemons_by_type(
             &self,
-            request: tonic::Request<super::Query>,
+            request: tonic::Request<super::GetPokemonsByTypeRequest>,
         ) -> Result<tonic::Response<Self::GetPokemonsByTypeStream>, tonic::Status>;
         async fn make_pokedex_entry(
             &self,
@@ -229,12 +234,18 @@ pub mod poke_dex_server {
                 "/pokedex.PokeDex/GetPokemonsByType" => {
                     #[allow(non_camel_case_types)]
                     struct GetPokemonsByTypeSvc<T: PokeDex>(pub Arc<T>);
-                    impl<T: PokeDex> tonic::server::ServerStreamingService<super::Query> for GetPokemonsByTypeSvc<T> {
+                    impl<T: PokeDex>
+                        tonic::server::ServerStreamingService<super::GetPokemonsByTypeRequest>
+                        for GetPokemonsByTypeSvc<T>
+                    {
                         type Response = super::PokemonResponse;
                         type ResponseStream = T::GetPokemonsByTypeStream;
                         type Future =
                             BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
-                        fn call(&mut self, request: tonic::Request<super::Query>) -> Self::Future {
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::GetPokemonsByTypeRequest>,
+                        ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { inner.get_pokemons_by_type(request).await };
                             Box::pin(fut)

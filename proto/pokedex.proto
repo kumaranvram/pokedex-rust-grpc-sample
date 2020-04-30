@@ -42,8 +42,12 @@ message PokedexEntryResponse {
     int32 id = 1;
 }
 
+message GetPokemonsByTypeRequest {
+    PokemonType pokemonType = 1;
+}
+
 service PokeDex {
     rpc GetPokemonByName(Query) returns (PokemonResponse);
-    rpc GetPokemonsByType(Query) returns (stream PokemonResponse);
+    rpc GetPokemonsByType(GetPokemonsByTypeRequest) returns (stream PokemonResponse);
     rpc MakePokedexEntry(Pokemon) returns (PokedexEntryResponse);
 }
