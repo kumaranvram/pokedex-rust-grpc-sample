@@ -4,9 +4,12 @@ mod errors;
 
 use tonic::{transport::Server, Status, Response, Request};
 use crate::pokedexpb::poke_dex_server::{PokeDex, PokeDexServer};
-use crate::pokedexpb::{PokemonResponse, PokemonsResponse, Query, Pokemon, PokedexEntryResponse, PokemonType};
+use crate::pokedexpb::{PokemonResponse, Query, Pokemon, PokedexEntryResponse, PokemonType};
 use dotenv::dotenv;
 use std::env;
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
+use tonic::codegen::Stream;
 
 #[macro_use]
 extern crate diesel;
@@ -50,22 +53,32 @@ impl PokeDex for PokeDexContext {
         }
     }
 
-    async fn get_pokemons_by_type(&self, request: Request<Query>) -> Result<Response<PokemonsResponse>, Status> {
+    type GetPokemonsByTypeStream: Stream<Item = Result<super::PokemonResponse, tonic::Status>>
+                                                    + Send
+                                                    + Sync
+                                                    + 'static = mpsc::Receiver<Result<PokemonResponse, Status>>;
+    async fn get_pokemons_by_type(&self, request: Request<Query>) -> Result<Response<Self::GetPokemonsByTypeStream>, Status> {
         let requested_type = String::from(request.into_inner().value);
-        match db::Pokemon::find_by_type(requested_type) {
-            Ok(pokemons) => {
-                Result::Ok(tonic::Response::new(PokemonsResponse {
-                    pokemons: pokemons.into_iter().map(|p| {
-                        return PokemonResponse {
-                            id: p.id,
-                            name: p.name,
-                            pokemon_type: to_pokemon_types(p.types),
-                        };
-                    }).collect()
-                }))
+        let (mut tx, rx) = mpsc::channel();
+
+
+        tokio::spawn(async move {
+            let pokemons = db::Pokemon::find_by_type(requested_type).unwrap();
+            for p in pokemons {
+                println!("{}", p.name);
+                println!("{}", p.id);
             }
-            Err(err) => Result::Err(Status::not_found(err.to_string()))
-        }
+            // for p in pokemons {
+            //     let pokemon = p.clone();
+            //     tx.send(Ok(PokemonResponse {
+            //         id: pokemon.id,
+            //         name: pokemon.name,
+            //         pokemon_type: to_pokemon_types(p.types),
+            //     })).await.unwrap();
+            // }
+        });
+
+        Ok(Response::new(rx))
     }
 
     async fn make_pokedex_entry(&self, request: Request<Pokemon>) -> Result<Response<PokedexEntryResponse>, Status> {

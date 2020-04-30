@@ -27,11 +27,6 @@ pub struct PokemonResponse {
     pub pokemon_type: ::std::vec::Vec<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PokemonsResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub pokemons: ::std::vec::Vec<PokemonResponse>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PokedexEntryResponse {
     #[prost(int32, tag = "1")]
     pub id: i32,
@@ -103,7 +98,8 @@ pub mod poke_dex_client {
         pub async fn get_pokemons_by_type(
             &mut self,
             request: impl tonic::IntoRequest<super::Query>,
-        ) -> Result<tonic::Response<super::PokemonsResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<tonic::codec::Streaming<super::PokemonResponse>>, tonic::Status>
+        {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -112,7 +108,9 @@ pub mod poke_dex_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/pokedex.PokeDex/GetPokemonsByType");
-            self.inner.unary(request.into_request(), path, codec).await
+            self.inner
+                .server_streaming(request.into_request(), path, codec)
+                .await
         }
         pub async fn make_pokedex_entry(
             &mut self,
@@ -153,10 +151,15 @@ pub mod poke_dex_server {
             &self,
             request: tonic::Request<super::Query>,
         ) -> Result<tonic::Response<super::PokemonResponse>, tonic::Status>;
+        #[doc = "Server streaming response type for the GetPokemonsByType method."]
+        type GetPokemonsByTypeStream: Stream<Item = Result<super::PokemonResponse, tonic::Status>>
+            + Send
+            + Sync
+            + 'static;
         async fn get_pokemons_by_type(
             &self,
             request: tonic::Request<super::Query>,
-        ) -> Result<tonic::Response<super::PokemonsResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<Self::GetPokemonsByTypeStream>, tonic::Status>;
         async fn make_pokedex_entry(
             &self,
             request: tonic::Request<super::Pokemon>,
@@ -226,9 +229,11 @@ pub mod poke_dex_server {
                 "/pokedex.PokeDex/GetPokemonsByType" => {
                     #[allow(non_camel_case_types)]
                     struct GetPokemonsByTypeSvc<T: PokeDex>(pub Arc<T>);
-                    impl<T: PokeDex> tonic::server::UnaryService<super::Query> for GetPokemonsByTypeSvc<T> {
-                        type Response = super::PokemonsResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                    impl<T: PokeDex> tonic::server::ServerStreamingService<super::Query> for GetPokemonsByTypeSvc<T> {
+                        type Response = super::PokemonResponse;
+                        type ResponseStream = T::GetPokemonsByTypeStream;
+                        type Future =
+                            BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
                         fn call(&mut self, request: tonic::Request<super::Query>) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { inner.get_pokemons_by_type(request).await };
@@ -237,7 +242,7 @@ pub mod poke_dex_server {
                     }
                     let inner = self.inner.clone();
                     let fut = async move {
-                        let interceptor = inner.1.clone();
+                        let interceptor = inner.1;
                         let inner = inner.0;
                         let method = GetPokemonsByTypeSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
@@ -246,7 +251,7 @@ pub mod poke_dex_server {
                         } else {
                             tonic::server::Grpc::new(codec)
                         };
-                        let res = grpc.unary(method, req).await;
+                        let res = grpc.server_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
